@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Group Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Spinner Overlay */
+        .loading-overlay {
+            position: fixed;
+            z-index: 1000;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex; justify-content: center; align-items: center;
+            flex-direction: column;
+            font-size: 18px; color: #333;
+            text-align: center;
+        }
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            width: 60px; height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        function showLoading() {
+            // Create overlay dynamically
+            let overlay = document.createElement("div");
+            overlay.className = "loading-overlay";
+            overlay.innerHTML = `
+                <div class="spinner"></div>
+                <p id="loading-message">Uploading fingerprint image...</p>
+            `;
+            document.body.appendChild(overlay);
+
+            // Step messages
+            let messages = [
+                "Uploading fingerprint image...",
+                "Checking image quality (blur detection)...",
+                "Extracting features using CNN models...",
+                "Comparing with fingerprint embeddings...",
+                "Finalizing prediction..."
+            ];
+            
+            let msgIndex = 0;
+            let msgBox = overlay.querySelector("#loading-message");
+            
+            let interval = setInterval(() => {
+                if (msgIndex < messages.length - 1) {
+                    msgIndex++;
+                    msgBox.innerText = messages[msgIndex];
+                }
+            }, 2000);
+
+            // Stop interval once page unloads
+            window.addEventListener("beforeunload", () => clearInterval(interval));
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Blood Group Prediction Prototype</h1>
+        <form action="/" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+            <label for="file">Upload Fingerprint Image:</label>
+            <input type="file" name="file" id="file" required>
+            <button type="submit">Predict</button>
+        </form>
+
+        {% if prediction %}
+        <div class="result">
+            <h2>Predicted Blood Group:</h2>
+            <p>{{ prediction }}</p>
+        </div>
+        {% endif %}
+        
+        {% if error %}
+        <div class="error">
+            <p style="color:red;">{{ error }}</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
