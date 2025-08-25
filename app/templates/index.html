@@ -4,88 +4,160 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Group Prediction</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Spinner Overlay */
-        .loading-overlay {
-            position: fixed;
-            z-index: 1000;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.9);
-            display: flex; justify-content: center; align-items: center;
-            flex-direction: column;
-            font-size: 18px; color: #333;
+        body {
+            font-family: Arial, sans-serif;
+            background-image: linear-gradient(rgba(242, 242, 242, 0.85), rgba(242, 242, 242, 0.85)), url('https://images.unsplash.com/photo-1528460033278-a6ba57020470?q=80&w=2835&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px 50px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
             text-align: center;
+            width: 450px;
+            animation: fadeIn 0.8s ease-in-out;
         }
-        .spinner {
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid #3498db;
-            border-radius: 50%;
-            width: 60px; height: 60px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        h1 { margin-bottom: 20px; color: #333; }
+        .result-card {
+            margin-top: 20px;
+            background-color: #e7f3fe;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 5px solid #007BFF;
+            text-align: left;
+            animation: slideIn 0.6s ease-out;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .uploaded-image {
+            max-width: 150px;
+            border-radius: 8px;
+            border: 3px solid #007BFF;
+            margin: 0 auto 15px auto;
+            display: block;
         }
+        .final-prediction { font-size: 2.5em; font-weight: bold; color: #007BFF; text-align: center; }
+        .breakdown { margin-top: 15px; }
+        .breakdown h4 { font-size: 1.1rem; font-weight: bold; }
+        .ensemble-details { padding-left: 20px; font-style: italic; color: #555; font-size: 0.9em; }
+        /* --- NEW: Styles for the correction form --- */
+        .correction-form {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #cce5ff;
+        }
+        .correction-form label { font-weight: bold; color: #333; }
+        .spinner { border: 6px solid #f3f3f3; border-top: 6px solid #007BFF; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-overlay { position: fixed; z-index: 1000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; flex-direction: column; font-size: 18px; color: #333; text-align: center; }
     </style>
     <script>
         function showLoading() {
-            // Create overlay dynamically
+            if (document.getElementById('file').files.length === 0) { return; }
             let overlay = document.createElement("div");
             overlay.className = "loading-overlay";
-            overlay.innerHTML = `
-                <div class="spinner"></div>
-                <p id="loading-message">Uploading fingerprint image...</p>
-            `;
+            overlay.innerHTML = `<div class="spinner"></div><p id="loading-message">Uploading fingerprint...</p>`;
             document.body.appendChild(overlay);
-
-            // Step messages
-            let messages = [
-                "Uploading fingerprint image...",
-                "Checking image quality (blur detection)...",
-                "Extracting features using CNN models...",
-                "Comparing with fingerprint embeddings...",
-                "Finalizing prediction..."
-            ];
-            
+            let messages = ["Uploading fingerprint...", "Processing & enhancing image...", "Analyzing with CNN Ensemble...", "Querying fingerprint database...", "Combining predictions..."];
             let msgIndex = 0;
             let msgBox = overlay.querySelector("#loading-message");
-            
             let interval = setInterval(() => {
                 if (msgIndex < messages.length - 1) {
                     msgIndex++;
                     msgBox.innerText = messages[msgIndex];
-                }
-            }, 2000);
-
-            // Stop interval once page unloads
-            window.addEventListener("beforeunload", () => clearInterval(interval));
+                } else { clearInterval(interval); }
+            }, 1500);
+            window.addEventListener("pageshow", () => {
+                let overlay = document.querySelector(".loading-overlay");
+                if(overlay) { overlay.remove(); }
+            });
         }
     </script>
 </head>
 <body>
     <div class="container">
-        <h1>Blood Group Prediction Prototype</h1>
+        <!-- --- NEW: Section to display flashed messages --- -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h1>Blood Group Prediction</h1>
+        <p class="text-muted mb-4">Upload a fingerprint image to determine the blood group.</p>
+        
         <form action="/" method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
-            <label for="file">Upload Fingerprint Image:</label>
-            <input type="file" name="file" id="file" required>
-            <button type="submit">Predict</button>
+            <div class="mb-3">
+                <input class="form-control" type="file" name="file" id="file" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Predict</button>
         </form>
 
-        {% if prediction %}
-        <div class="result">
-            <h2>Predicted Blood Group:</h2>
-            <p>{{ prediction }}</p>
-        </div>
-        {% endif %}
-        
         {% if error %}
-        <div class="error">
-            <p style="color:red;">{{ error }}</p>
+        <div class="alert alert-danger mt-4" role="alert"> {{ error }} </div>
+        {% endif %}
+
+        {% if prediction %}
+        <div class="result-card">
+            {% if image_data %}
+                <img src="data:image/jpeg;base64,{{ image_data }}" alt="Processed Fingerprint" class="uploaded-image">
+            {% endif %}
+            
+            <h3>Final Result</h3>
+            <div class="final-prediction">{{ prediction }}</div>
+            <p><strong>Combined Confidence: {{ confidence }}</strong></p>
+            
+            <div class="breakdown">
+                <h4>Prediction Breakdown:</h4>
+                {% if cnn_details %}
+                    <p><b>{{ cnn_details }}</b></p>
+                    {% if ensemble_details %}
+                        <div class="ensemble-details">
+                        {% for detail in ensemble_details %}
+                            <p class="mb-1">{{ detail }}</p>
+                        {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endif %}
+                {% if emb_details %}
+                    <p class="mt-2"><b>{{ emb_details }}</b></p>
+                {% endif %}
+            </div>
+
+            <!-- --- NEW: Correction Form --- -->
+            <div class="correction-form">
+                <form action="{{ url_for('correct') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="correct_label" class="form-label">Is this prediction incorrect?</label>
+                        <select class="form-select" name="correct_label" id="correct_label" required>
+                            <option value="" disabled selected>Select the correct blood group</option>
+                            {% for class_name in class_names %}
+                                <option value="{{ class_name }}">{{ class_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm w-100">Submit Correction</button>
+                </form>
+            </div>
         </div>
         {% endif %}
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
