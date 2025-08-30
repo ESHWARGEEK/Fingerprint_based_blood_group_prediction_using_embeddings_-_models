@@ -88,6 +88,10 @@ python app.py
 - Collect larger, more diverse fingerprint datasets.
 - Extend to multimodal biometric + health record integration.
 
+Future implementations:
+- planning to integrate with Large Language models(LLM's) to give structure output along with facts of particular blood group 
+and tell it's users that how this models can give prediction by showing pattern in the fingerprint
+
 🤝 Acknowledgements
 
 - TensorFlow/Keras & PyTorch for deep learning frameworks
