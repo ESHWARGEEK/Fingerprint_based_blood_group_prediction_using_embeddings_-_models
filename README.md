@@ -1,6 +1,6 @@
 # 🧬 Fingerprint-Based Blood Group Detection using Deep Learning & Embeddings  
-<img width="1600" height="821" alt="image" src="https://github.com/user-attachments/assets/413bfc47-ddf6-48ec-8e04-71e272b4d6ce" />
-<img width="1707" height="834" alt="Screenshot 2025-08-20 202737" src="https://github.com/user-attachments/assets/05969df4-5e32-430c-be8f-a8b22f7d542e" />
+<img src="/results/Screenshot 2025-08-20 202737.png">
+<img src="/results/Screenshot 2025-08-20 202758.png>
 
 
 This project demonstrates the use of **fingerprint biometrics** and **deep learning** to predict a person’s blood group. The system combines **CNN-based classification models** with **fingerprint embeddings** stored in a **vector database** for efficient retrieval and similarity search.  
